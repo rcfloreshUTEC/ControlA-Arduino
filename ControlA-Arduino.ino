@@ -5,9 +5,10 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <HTTPClient.h>
+#include <ArduinoJson.h>  // Asegúrate de instalar la biblioteca ArduinoJson para manejar JSON
 
 // Definir el servidor donde se encuentra la API
-const char* serverName = "http://192.168.68.115:5000/verify";
+const char* serverName = "http://192.168.68.107:8000/api/check_student/";
 
 // Inicialización del PN532 en I2C
 PN532_I2C pn532_i2c(Wire);
@@ -24,7 +25,7 @@ const char* ssid = "Marvel";
 const char* password = "DrStrange";
 
 // Nombre del Aula
-String classroom = "BJ001";
+String aula = "BJ-403";
 
 void setup_wifi() {
   Serial.println("Conectando a WiFi...");
@@ -50,14 +51,18 @@ void setup_wifi() {
   }
 }
 
-void enviarDatos(String codStudent, String classroom) {
+int enviarDatos(String carnet, String aula) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
 
     // Crear la carga útil (payload)
-    String jsonPayload = "{\"CodStudent\":\"" + codStudent + "\", \"Classroom\":\"" + classroom + "\"}";
+    String jsonPayload = "{\"aula\":\"" + aula + "\", \"carnet\":\"" + carnet + "\"}";
+    
+    // Imprimir el payload JSON en la consola
+    Serial.println("Enviando datos a la API:");
+    Serial.println(jsonPayload);
 
     // Hacer una solicitud POST
     int httpResponseCode = http.POST(jsonPayload);
@@ -65,7 +70,48 @@ void enviarDatos(String codStudent, String classroom) {
     if (httpResponseCode > 0) {
       String response = http.getString();
       Serial.println(httpResponseCode);
+      Serial.println("Respuesta de la API:");
       Serial.println(response);
+
+      // Analizar la respuesta JSON para verificar el valor de RSMDB
+      StaticJsonDocument<512> doc;  // Ajusta el tamaño según la respuesta esperada
+      DeserializationError error = deserializeJson(doc, response);
+
+      if (!error) {
+        bool rsmdb = doc["RSMDB"];
+        
+        // Mostrar carnet en el formato deseado
+        lcd.clear();
+        lcd.print(carnet);
+        lcd.setCursor(0, 1);
+
+        // Si RSMDB es true, mostrar "Registro OK"; si es false, mostrar "Error de registro"
+        if (rsmdb) {
+          lcd.print("Registro OK");
+          Serial.println("Registro OK");
+
+          // Emitir dos pitidos cortos para éxito
+          for (int i = 0; i < 2; i++) {
+            digitalWrite(BUZZER_PIN, LOW);
+            delay(100);
+            digitalWrite(BUZZER_PIN, HIGH);
+            delay(100);
+          }
+        } else {
+          lcd.print("Error de registro");
+          Serial.println("Error de registro");
+
+          // Emitir tres pitidos cortos para error en el registro
+          for (int i = 0; i < 3; i++) {
+            digitalWrite(BUZZER_PIN, LOW);
+            delay(100);
+            digitalWrite(BUZZER_PIN, HIGH);
+            delay(100);
+          }
+        }
+      } else {
+        Serial.println("Error al analizar la respuesta JSON");
+      }
     } else {
       Serial.print("Error en la solicitud: ");
       Serial.println(httpResponseCode);
@@ -73,8 +119,10 @@ void enviarDatos(String codStudent, String classroom) {
 
     // Cerrar la conexión
     http.end();
+    return httpResponseCode;
   } else {
     Serial.println("Error: No conectado a WiFi");
+    return -1;  // Código especial para indicar fallo de conexión
   }
 }
 
@@ -118,33 +166,16 @@ void loop(void) {
         record.getPayload(payload);
 
         // El texto real empieza después del encabezado de 3 bytes
-        String codstudent = "";
+        String carnet = "";
         for (int j = 3; j < payloadLength; j++) {
-          codstudent += (char)payload[j];
+          carnet += (char)payload[j];
         }
 
-        if (codstudent.length() > 0) {
-          // Mostrar el texto en el display
-          lcd.clear();
-          lcd.print("Codigo carnet:");
-          lcd.setCursor(0, 1);
-          lcd.print(codstudent);  // Muestra el texto en la segunda línea
-          
-          Serial.println("CodStudent: " + codstudent);
-          Serial.println("Classroom: " + classroom);
-          
-          // Enviar datos a la API
-          enviarDatos(codstudent, classroom);
-          
-          // Emitir dos pitidos cortos
-          for (int i = 0; i < 2; i++) {
-            digitalWrite(BUZZER_PIN, LOW);
-            delay(100);
-            digitalWrite(BUZZER_PIN, HIGH);
-            delay(100);
-          }
+        if (carnet.length() > 0) {
+          // Enviar datos a la API y obtener el código de respuesta
+          int httpResponseCode = enviarDatos(carnet, aula);
         } else {
-          // Si codstudent está vacío, mostrar un mensaje de error
+          // Si carnet está vacío, mostrar un mensaje de error
           lcd.clear();
           lcd.print("Error: Codigo");
           lcd.setCursor(0, 1);
@@ -152,7 +183,7 @@ void loop(void) {
 
           Serial.println("Error: Codigo de estudiante vacio.");
           
-          // Emitir tres pitidos cortos
+          // Emitir tres pitidos cortos para error
           for (int i = 0; i < 3; i++) {
             digitalWrite(BUZZER_PIN, LOW);
             delay(100);
