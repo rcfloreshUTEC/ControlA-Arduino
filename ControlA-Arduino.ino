@@ -146,8 +146,11 @@ void setup(void) {
   digitalWrite(BUZZER_PIN, HIGH);  // Asegurarse de que el buzzer esté apagado al inicio
 }
 
-void loop(void) {  
-  lcd.clear();  // Limpiar pantalla antes de mostrar el nuevo mensaje
+void loop(void) {
+  static unsigned long lastErrorSoundTime = 0;
+  const unsigned long errorSoundInterval = 1800000; // cada treinta minutos.
+  
+  lcd.clear();
   lcd.print("Esperando NFC...");
   Serial.println("Esperando una tarjeta NFC...");
 
@@ -197,15 +200,20 @@ void loop(void) {
   } else {
     lcd.clear();
     lcd.print("Error al leer");
-    Serial.println("No se detectó ninguna tarjeta.");
-     
-    for (int i = 0; i < 3; i++) {
-      digitalWrite(BUZZER_PIN, LOW);
-      delay(100);
-      digitalWrite(BUZZER_PIN, HIGH);
-      delay(100);
+
+    // Emitir sonido de error solo si ha pasado el intervalo de tiempo
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastErrorSoundTime >= errorSoundInterval) {
+      Serial.println("No se detectó ninguna tarjeta.");
+      for (int i = 0; i < 3; i++) {
+        digitalWrite(BUZZER_PIN, LOW);
+        delay(100);
+        digitalWrite(BUZZER_PIN, HIGH);
+        delay(100);
+      }
+      lastErrorSoundTime = currentMillis;
     }
   }
 
-  delay(1000);
+  delay(1000);  // Tiempo de espera para el siguiente ciclo
 }
