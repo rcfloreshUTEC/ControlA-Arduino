@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <HTTPClient.h>
-#include <ArduinoJson.h>  // Asegúrate de instalar la biblioteca ArduinoJson para manejar JSON
+#include <ArduinoJson.h>
 
 // Definir el servidor donde se encuentra la API
 const char* serverName = "http://192.168.68.107:8000/api/check_student/";
@@ -15,7 +15,7 @@ PN532_I2C pn532_i2c(Wire);
 NfcAdapter nfc = NfcAdapter(pn532_i2c);
 
 // Inicialización del display 1602A en I2C
-LiquidCrystal_I2C lcd(0x27, 16, 2);  // Asegúrate de que la dirección I2C es correcta; 0x27 es común
+LiquidCrystal_I2C lcd(0x27, 16, 2);  
 
 // Pines del buzzer
 #define BUZZER_PIN 15  // Pin conectado a I/O del buzzer (D15 en ESP32)
@@ -143,7 +143,7 @@ void setup(void) {
 
   // Configurar el pin del buzzer como salida
   pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(BUZZER_PIN, HIGH);  // Asegurarse de que el buzzer esté apagado al inicio
+  digitalWrite(BUZZER_PIN, HIGH); 
 }
 
 void loop(void) {
