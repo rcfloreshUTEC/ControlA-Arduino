@@ -13,8 +13,6 @@ const char* serverName = "http://192.168.68.107:8000/api/check_student/";
 // Definir API Key
 const char* apiKey = "662f1d11-6daa-42bd-9e70-c4114bacf43e";
 
-
-
 // Inicialización del PN532 en I2C
 PN532_I2C pn532_i2c(Wire);
 NfcAdapter nfc = NfcAdapter(pn532_i2c);
@@ -61,7 +59,7 @@ int enviarDatos(String carnet, String aula) {
     HTTPClient http;
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("X-API-KEY", apiKey);  // Agregar la API Key en el encabezado
+    http.addHeader("X-API-KEY", apiKey);  // Agregar la API Key en el encabezado.
 
     // Crear la carga útil (payload)
     String jsonPayload = "{\"aula\":\"" + aula + "\", \"carnet\":\"" + carnet + "\"}";
