@@ -28,7 +28,7 @@ const char* ssid = "Marvel";
 const char* password = "DrStrange";
 
 // Nombre del Aula
-String aula = "BJ-403";
+String aula = "FM-402";
 
 void setup_wifi() {
   Serial.println("Conectando a WiFi...");
