@@ -8,7 +8,7 @@
 #include <ArduinoJson.h>
 
 // Definir el servidor donde se encuentra la API
-const char* serverName = "http://192.168.68.107:8000/api/check_student/";
+const char* serverName = "http://20.242.123.84:8000/api/check_student/";
 
 // Definir API Key
 const char* apiKey = "662f1d11-6daa-42bd-9e70-c4114bacf43e";
@@ -24,11 +24,11 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 #define BUZZER_PIN 15  // Pin conectado a I/O del buzzer (D15 en ESP32)
 
 // Configuración de WiFi
-const char* ssid = "Marvel";
-const char* password = "DrStrange";
+const char* ssid = "moto";
+const char* password = "123456789";
 
 // Nombre del Aula
-String aula = "FM-402";
+String aula = "BJ-201";
 
 void setup_wifi() {
   Serial.println("Conectando a WiFi...");
